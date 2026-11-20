@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APKs
 on:
   workflow_dispatch:
   push:
@@ -23,9 +23,13 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.14.3'
-      - name: Build debug APK
-        run: gradle assembleDebug
+      - name: Build Admin and User APKs
+        run: gradle :app:assembleDebug :user-app:assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: farhan-device-manager-debug-apk
+          name: farhan-admin-app-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: farhan-user-app-debug-apk
+          path: user-app/build/outputs/apk/debug/user-app-debug.apk
