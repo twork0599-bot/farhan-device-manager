@@ -53,10 +53,16 @@ private class Api(ctx:Context) {
         http.newCall(b.build()).execute().use{r->val s=r.body?.string().orEmpty();if(!r.isSuccessful)error("HTTP ${r.code}: $s");s}
     }
     suspend fun auth(email:String,password:String,signup:Boolean){
+        val cleanEmail=email.trim()
+        require(cleanEmail.isNotBlank()) { "Email address দিন।" }
+        require(android.util.Patterns.EMAIL_ADDRESS.matcher(cleanEmail).matches()) { "সঠিক Email address লিখুন।" }
+        require(password.isNotBlank()) { "Password দিন।" }
+        require(password.length >= 6) { "Password কমপক্ষে ৬ অক্ষরের হতে হবে।" }
         val path=if(signup)"/auth/v1/signup" else "/auth/v1/token?grant_type=password"
-        val j=JSONObject(req("POST",path,JSONObject().put("email",email).put("password",password)))
+        val j=JSONObject(req("POST",path,JSONObject().put("email",cleanEmail).put("password",password)))
         if(j.has("access_token")){token=j.getString("access_token");uid=j.getJSONObject("user").getString("id")}
         else if(!signup) error("Login failed")
+        else if(j.has("user") && !j.isNull("user")) error("Account created. Email confirmation required; check your inbox.")
     }
     fun signOut(){token=null;uid=null;deviceId=null}
     suspend fun invite():String{
