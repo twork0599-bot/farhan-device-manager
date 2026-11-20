@@ -1,4 +1,6 @@
 -- Anonymous User App pairing and device-token protected RPCs.
+revoke execute on function public.claim_pairing_code(text,text,text,text,text,text) from anon, public;
+grant execute on function public.claim_pairing_code(text,text,text,text,text,text) to authenticated;
 -- User devices never receive Supabase Auth sessions or direct table access.
 alter table public.devices add column if not exists device_token_hash text;
 create index if not exists devices_device_token_hash_idx on public.devices(device_token_hash);
