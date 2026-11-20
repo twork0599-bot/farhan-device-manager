@@ -99,9 +99,6 @@ private class UserApi(context: Context) {
 
     suspend fun pair(code: String, context: Context) {
         require(code.length == 6 && code.all(Char::isDigit)) { "৬ সংখ্যার Pairing Code লিখুন।" }
-        val launcher = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-        val apps = context.packageManager.queryIntentActivities(launcher, 0)
-            .map { it.activityInfo.packageName }.distinct().take(80)
         val payload = JSONObject()
             .put("p_code_hash", sha256(code))
             .put("p_device_key", deviceKey)
@@ -110,7 +107,7 @@ private class UserApi(context: Context) {
             .put("p_android_version", android.os.Build.VERSION.RELEASE ?: "unknown")
             .put("p_app_version", "1.0.0")
         deviceId = request("POST", "/rest/v1/rpc/claim_pairing_code", payload).trim().trim('"')
-        heartbeat(apps)
+        heartbeat()
     }
 
     suspend fun heartbeat() {
@@ -189,7 +186,7 @@ private fun UserScreen(context: Context) {
     Scaffold(topBar = { TopAppBar(title = { Text("Farhan Device Manager • User") }) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!signedIn) {
-                Text("এই ফোনটি Admin-এর সঙ্গে যুক্ত করতে আপনার অ্যাকাউন্টে Sign in করুন। Admin ও User ফোনে একই অ্যাকাউন্ট ব্যবহার করুন।")
+                Text("নিজের আলাদা User account দিয়ে Sign in বা Sign up করুন। Admin-এর account ব্যবহার করার প্রয়োজন নেই।")
                 OutlinedTextField(email, { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(password, { password = it }, label = { Text("Password") }, modifier = Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -205,9 +202,9 @@ private fun UserScreen(context: Context) {
                 }) { Text("Pair this phone") }
                 TextButton(onClick = { api.signOut(); signedIn = false }) { Text("Sign out") }
             } else {
-                Text("This phone is paired with the Admin account.")
+                Text("এই ফোনটি Admin-এর সঙ্গে যুক্ত হয়েছে। Admin ও User account আলাদা।")
                 Text("Device: ${android.os.Build.MODEL}")
-                Text("Keep this app open while you want to receive requests.")
+                Text("রিমোট অনুরোধ পেতে আপাতত অ্যাপটি খোলা রাখুন। Android-এর ব্যাটারি সেটিংস বা অ্যাপ বন্ধ করলে সংযোগ থেমে যেতে পারে।")
                 OutlinedButton(onClick = { scope.launch { try { api.unpair(); message = "This phone has been unpaired." } catch (e: Exception) { message = e.message ?: "Unpair failed" } } }) { Text("Unpair this phone") }
                 TextButton(onClick = { api.signOut(); signedIn = false }) { Text("Sign out") }
             }
