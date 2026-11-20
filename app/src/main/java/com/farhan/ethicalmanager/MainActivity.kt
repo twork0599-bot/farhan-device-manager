@@ -102,6 +102,7 @@ private class Api(ctx:Context) {
     private fun sha(s:String)=MessageDigest.getInstance("SHA-256").digest(s.toByteArray()).joinToString(""){"%02x".format(it)}
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DeviceManager(ctx:Context){
     val api=remember{Api(ctx)};val scope=rememberCoroutineScope()
